@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 08-14062026-add-logo-column
+      author: Jahangir Alisoy
+      changes:
+        - addColumn:
+            tableName: banks
+            columns:
+              - column:
+                  name: logo
+                  type: BYTEA

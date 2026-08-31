@@ -1,0 +1,99 @@
+spring:
+  application:
+    name: producer
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/teknofest}
+    username: ${DB_USERNAME:teknofest}
+    password: ${DB_PASSWORD:teknofest}
+
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/master.yaml
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 1MB
+      max-request-size: 1MB
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${NO_REPLY_EMAIL}
+    password: ${NO_REPLY_EMAIL_PASSWORD}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: ${PORT:9090}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+
+application:
+  security:
+    jwt:
+      # No default. The previous value was committed to this repository, which
+      # meant anyone with read access to the source could mint a token for any
+      # account, SUPER_ADMIN included. Startup now fails without this variable.
+      secret-key: ${JWT_SECRET_KEY}
+      access-token:
+        expiration: ${ACCESS_TOKEN_EXPIRATION:36000000}
+
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,https://signa-txcj.onrender.com}
+
+    # Oblivious pseudonym layer (RFC 9497 VOPRF, ciphersuite P256-SHA256).
+    # See docs/oprf-layer.md for the protocol, the threat model and the
+    # key rotation procedure.
+    oprf:
+      # A P-256 scalar in 64 hex characters. No default on purpose: a committed
+      # OPRF key would let anyone holding this source compute the pseudonym of
+      # any identifier they can guess. Without it the application starts only
+      # under the 'dev' profile, on a key that is public by construction.
+      active-key: ${SIGNA_OPRF_ACTIVE_KEY:}
+
+      # Superseded keys, kept evaluable during a rotation so banks can still
+      # recompute pseudonyms enrolled under them. Comma separated.
+      previous-keys: ${SIGNA_OPRF_PREVIOUS_KEYS:}
+
+      # Largest batch one request may carry; bounds CPU per request.
+      max-batch-size: ${SIGNA_OPRF_MAX_BATCH_SIZE:128}
+
+      # Per-bank ceilings. These are what stop a member bank from walking the
+      # identifier space through the oracle; do not disable them outside tests.
+      rate-limit:
+        enabled: ${SIGNA_OPRF_RATE_LIMIT_ENABLED:true}
+        elements-per-minute: ${SIGNA_OPRF_ELEMENTS_PER_MINUTE:600}
+        elements-per-day: ${SIGNA_OPRF_ELEMENTS_PER_DAY:50000}
+
+      # Development convenience that accepts raw identifiers at the server and
+      # runs the bank's half of the protocol here. Defeats the privacy property;
+      # refuses to start under the 'prod' profile.
+      local-client:
+        enabled: ${SIGNA_OPRF_LOCAL_CLIENT_ENABLED:false}
+
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:http://localhost:5173}

@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 12-15062026-add-transaction-fraud-status-column
+      author: Jahangir Alisoy
+      changes:
+        - addColumn:
+            tableName: simulations
+            columns:
+              - column:
+                  name: transaction_fraud_status
+                  type: VARCHAR(255)

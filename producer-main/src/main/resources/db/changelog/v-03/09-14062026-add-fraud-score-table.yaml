@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 09-14062026-add-fraud-score-column
+      author: Jahangir Alisoy
+      changes:
+        - addColumn:
+            tableName: transactions
+            columns:
+              - column:
+                  name: fraud_score
+                  type: DECIMAL(19,4)
+                  constraints:
+                    nullable: false

@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 10-14062026-add-hash-column
+      author: Jahangir Alisoy
+      changes:
+        - addColumn:
+            tableName: customers
+            columns:
+              - column:
+                  name: hash
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false

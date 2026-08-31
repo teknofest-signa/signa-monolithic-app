@@ -1,0 +1,178 @@
+databaseChangeLog:
+
+  # Replaces plaintext-FIN linkage with OPRF pseudonyms, and gives member banks
+  # a machine identity so OPRF use can be rate limited and audited per bank.
+
+  - changeSet:
+      id: 15-31082026-add-bank-api-credentials
+      author: signa-security
+      changes:
+        - addColumn:
+            tableName: banks
+            columns:
+              - column:
+                  name: client_id
+                  type: varchar(64)
+              - column:
+                  name: api_key_hash
+                  type: varchar(64)
+              - column:
+                  name: api_key_rotated_at
+                  type: timestamp with time zone
+              - column:
+                  name: oprf_enabled
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  # Existing rows predate the credential columns. Give each one a client id
+  # derived from its primary key so the NOT NULL and UNIQUE constraints below
+  # can be applied. api_key_hash stays null: a bank with no key cannot
+  # authenticate, so every existing bank must be issued one explicitly rather
+  # than inheriting a guessable default.
+  - changeSet:
+      id: 15-31082026-backfill-bank-client-id
+      author: signa-security
+      changes:
+        - sql:
+            sql: UPDATE banks SET client_id = 'bank_' || REPLACE(CAST(id AS VARCHAR), '-', '') WHERE client_id IS NULL
+
+  - changeSet:
+      id: 15-31082026-constrain-bank-client-id
+      author: signa-security
+      changes:
+        - addNotNullConstraint:
+            tableName: banks
+            columnName: client_id
+            columnDataType: varchar(64)
+        - addUniqueConstraint:
+            tableName: banks
+            columnNames: client_id
+            constraintName: uq_banks_client_id
+
+  # The customers.hash column held the raw FIN. It is dropped rather than
+  # migrated: a pseudonym cannot be computed from a FIN outside the bank that
+  # owns it, and keeping the column would leave the plaintext in the database
+  # and in every backup taken from it.
+  - changeSet:
+      id: 15-31082026-add-customer-pseudonym
+      author: signa-security
+      changes:
+        - addColumn:
+            tableName: customers
+            columns:
+              - column:
+                  name: pseudonym
+                  type: varchar(64)
+              - column:
+                  name: oprf_key_id
+                  type: varchar(32)
+
+  - changeSet:
+      id: 15-31082026-drop-customer-hash
+      author: signa-security
+      changes:
+        - dropColumn:
+            tableName: customers
+            columnName: hash
+
+  # ---------------------------------------------------------------------------
+  # DESTRUCTIVE, AND DELIBERATE. Review before running against anything you care
+  # about.
+  #
+  # Customer rows enrolled before this migration are keyed by a raw FIN, which
+  # the changeset above just dropped. A pseudonym cannot be derived from them
+  # here: only the owning bank can run the blinding, because only the bank
+  # should ever hold the identifier. So these rows have no linkage key and can
+  # never match anything again.
+  #
+  # They are deleted rather than left behind with a NULL pseudonym, so that the
+  # NOT NULL constraint below can hold and no code path can ever write a
+  # customer without one. Member banks re-enrol through the OPRF.
+  #
+  # If you need the old rows for anything, snapshot the table before deploying.
+  # ---------------------------------------------------------------------------
+  - changeSet:
+      id: 15-31082026-purge-unmigratable-customers
+      author: signa-security
+      changes:
+        - delete:
+            tableName: customers
+            where: pseudonym IS NULL
+
+  - changeSet:
+      id: 15-31082026-constrain-customer-pseudonym
+      author: signa-security
+      changes:
+        - addNotNullConstraint:
+            tableName: customers
+            columnName: pseudonym
+            columnDataType: varchar(64)
+        - addNotNullConstraint:
+            tableName: customers
+            columnName: oprf_key_id
+            columnDataType: varchar(32)
+
+  - changeSet:
+      id: 15-31082026-index-customer-pseudonym
+      author: signa-security
+      changes:
+        - createIndex:
+            tableName: customers
+            indexName: idx_customers_pseudonym_key
+            columns:
+              - column:
+                  name: pseudonym
+              - column:
+                  name: oprf_key_id
+
+  - changeSet:
+      id: 15-31082026-add-oprf-evaluations-table
+      author: signa-security
+      changes:
+        - createTable:
+            tableName: oprf_evaluations
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: bank_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: key_id
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: batch_size
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: accepted
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rejection_reason
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: oprf_evaluations
+            indexName: idx_oprf_evaluations_bank_time
+            columns:
+              - column:
+                  name: bank_id
+              - column:
+                  name: created_at

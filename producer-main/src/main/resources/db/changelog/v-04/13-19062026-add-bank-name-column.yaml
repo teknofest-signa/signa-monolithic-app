@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 13-19062026-add-bank-name-column
+      author: Jahangir Alisoy
+      changes:
+        - addColumn:
+            tableName: customers
+            columns:
+              - column:
+                  name: bank_name
+                  type: VARCHAR(255)

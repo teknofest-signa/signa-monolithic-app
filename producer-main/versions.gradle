@@ -1,0 +1,15 @@
+ext {
+    v = [
+            springCloud    : "2025.1.1",
+            jjwt           : "0.13.0",
+            springdoc      : "3.0.2",
+            libphonenumber : "9.0.11",
+            awssdk         : "2.32.19",
+            commonsIo      : "2.20.0",
+            byteBuddy      : "1.15.11",
+            mapstruct      : "1.6.3",
+            resilience4j   : "2.2.0",
+            stripe         : "32.2.0-beta.2",
+            bouncycastle   : "1.79"
+    ]
+}

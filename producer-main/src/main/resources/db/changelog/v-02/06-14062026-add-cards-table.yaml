@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: 06-14062026-add-cards-table
+      author: Jahangir Alisoy
+      changes:
+        - createTable:
+            tableName: cards
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_number
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: expiry_month
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiry_year
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cvv
+                  type: VARCHAR(255)
+              - column:
+                  name: card_type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_status
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false

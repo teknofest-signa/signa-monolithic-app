@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 11-15062026-add-simulations-table
+      author: Jahangir Alisoy
+      changes:
+        - createTable:
+            tableName: simulations
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: simulation_type
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: from_account_id
+                  type: UUID
+              - column:
+                  name: to_account_id
+                  type: UUID
+              - column:
+                  name: amount
+                  type: numeric(19,4)
+              - column:
+                  name: currency
+                  type: varchar(255)
+              - column:
+                  name: transaction_type
+                  type: varchar(255)
+              - column:
+                  name: transaction_channel
+                  type: varchar(255)
+              - column:
+                  name: transaction_time
+                  type: timestamp with time zone
+              - column:
+                  name: is_new_beneficiary
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_cross_border_transaction
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_fraud_score
+                  type: numeric(19,4)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false

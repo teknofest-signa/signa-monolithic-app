@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 02-14062026-add-profile-photo-column
+      author: Jahangir Alisoy
+      changes:
+        - addColumn:
+            tableName: admins
+            columns:
+              - column:
+                  name: profile_photo
+                  type: BYTEA
