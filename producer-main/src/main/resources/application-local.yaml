@@ -1,0 +1,18 @@
+# In-memory database, for running the service with nothing installed.
+#
+# Activate alongside 'dev':  SPRING_PROFILES_ACTIVE=dev,local
+#
+# Everything is discarded when the process stops, so each run starts from an
+# empty network. Real deployments use PostgreSQL; this exists so a developer or
+# a demo machine does not need Docker or a database install to see the system
+# work end to end.
+spring:
+  datasource:
+    url: jdbc:h2:mem:signa;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    show-sql: false
+    database-platform: org.hibernate.dialect.H2Dialect

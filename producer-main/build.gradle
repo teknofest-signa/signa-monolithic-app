@@ -44,6 +44,10 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 	runtimeOnly 'org.postgresql:postgresql'
+
+	// Development only, activated by the 'local' profile. Lets the service run
+	// with no database installed at all; production always uses PostgreSQL.
+	runtimeOnly 'com.h2database:h2'
 	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${v.jjwt}"
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${v.jjwt}"
 

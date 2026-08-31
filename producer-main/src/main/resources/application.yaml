@@ -31,8 +31,11 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${NO_REPLY_EMAIL}
-    password: ${NO_REPLY_EMAIL_PASSWORD}
+    # Defaulted to empty so the service starts without SMTP configured.
+    # Invitation and password-reset mail then fails at send time, which is a
+    # far better failure than refusing to boot.
+    username: ${NO_REPLY_EMAIL:}
+    password: ${NO_REPLY_EMAIL_PASSWORD:}
     protocol: smtp
     properties:
       mail:
@@ -97,3 +100,12 @@ application:
 
   frontend:
     base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
+
+  # Only read under the 'dev' profile, by DevBootstrap. A fresh database has no
+  # operator account and no way to create one, so development seeds a first
+  # super administrator here.
+  bootstrap:
+    super-admin:
+      email: ${BOOTSTRAP_ADMIN_EMAIL:admin@signa.az}
+      username: ${BOOTSTRAP_ADMIN_USERNAME:Signa Operator}
+      password: ${BOOTSTRAP_ADMIN_PASSWORD:signa-dev-password}

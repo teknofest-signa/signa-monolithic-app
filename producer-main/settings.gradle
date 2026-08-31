@@ -1,1 +1,9 @@
+// Lets Gradle download the JDK the toolchain asks for. Without this, building
+// on a machine that does not already have JDK 26 installed fails with
+// "Cannot find a Java installation ... Toolchain download repositories have not
+// been configured", which is every fresh checkout.
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
 rootProject.name = 'producer'

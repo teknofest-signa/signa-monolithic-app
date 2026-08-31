@@ -57,8 +57,14 @@ public final class PiiNormalizer {
             throw new OprfProtocolException("identifier must not be empty");
         }
 
+        // Unicode white space, not Java's ASCII-only \s. A FIN pasted out of a
+        // PDF routinely carries a non-breaking space, and the bank-side
+        // JavaScript client strips those because JavaScript's \s is Unicode
+        // aware. If the two sides disagreed by one character class, the same
+        // customer would enrol under two pseudonyms and silently never match.
+        // The parity fixtures in PiiNormalizerTest and oprf.parity.mjs pin this.
         String normalized = Normalizer.normalize(rawIdentifier, Normalizer.Form.NFKC)
-                .replaceAll("[\\s\\p{Cf}-]", "")
+                .replaceAll("[\\p{IsWhite_Space}\\p{Cf}-]", "")
                 .toUpperCase(java.util.Locale.ROOT);
 
         if (normalized.isEmpty()) {
