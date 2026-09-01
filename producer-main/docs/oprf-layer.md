@@ -181,6 +181,23 @@ default and the application refuses to start without it, except under the `dev`
 profile, where it derives a key from a seed committed to this repository and logs
 a warning that the key is public.
 
+### A fresh clone needs no configuration
+
+`./gradlew bootRun` activates `dev,local` (see `build.gradle`), so a clone runs
+with an in-memory database, the published development OPRF key, the published
+development JWT key in `application-dev.yaml`, and a seeded operator account.
+Nothing has to be set up, and nothing in that path is secret.
+
+`bootJar` is deliberately left alone. The packaged artifact carries no default
+profile, so a deployment picks up none of those values and still fails fast
+without real key material:
+
+    Could not resolve placeholder 'JWT_SECRET_KEY'
+
+That split is the whole point. If the development keys also applied in
+production, anyone holding this repository could mint a SUPER_ADMIN token and
+recompute any pseudonym in the network.
+
 Generate one with:
 
 ```bash

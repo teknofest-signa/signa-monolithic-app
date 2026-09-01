@@ -1,0 +1,29 @@
+# Development profile.
+#
+# Everything here is a known, published value. That is the point: a fresh clone
+# should run with no setup at all. Nothing in this file is a secret, and nothing
+# in it is reachable unless the 'dev' profile is explicitly active.
+#
+#   ./gradlew bootRun      -> activates dev,local automatically (see build.gradle)
+#   .\start.ps1 -InMemory  -> same
+#
+# The packaged jar has no default profile, so a production deployment gets none
+# of this and still refuses to start without real key material. That split is
+# deliberate: the moment these values apply in production, anyone holding this
+# repository can mint a SUPER_ADMIN token and recompute any pseudonym.
+
+application:
+  security:
+    jwt:
+      # Publicly known. Signs development sessions only.
+      secret-key: signa-development-only-jwt-signing-key-do-not-use-in-production
+
+    oprf:
+      # Left empty on purpose. OprfKeyConfig derives the published development
+      # key from a committed seed when the dev profile is active, and logs a
+      # warning saying so.
+      active-key: ''
+
+logging:
+  level:
+    liquibase: WARN

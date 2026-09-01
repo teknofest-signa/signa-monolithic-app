@@ -67,6 +67,18 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
+// bootRun is a development task by definition, so it activates the development
+// profiles unless told otherwise. That is what makes a fresh clone run with no
+// configuration: `./gradlew bootRun` and nothing else.
+//
+// bootJar is deliberately left alone. The packaged artifact carries no default
+// profile, so a deployment gets none of the development key material and still
+// fails fast without real secrets.
+tasks.named('bootRun') {
+	systemProperty 'spring.profiles.active',
+			System.getProperty('spring.profiles.active') ?: System.getenv('SPRING_PROFILES_ACTIVE') ?: 'dev,local'
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
