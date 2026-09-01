@@ -1,0 +1,67 @@
+databaseChangeLog:
+
+  # The audit trail for the screening endpoint.
+  #
+  # Screening answers "is this person flagged anywhere in the network" for a
+  # pseudonym a member bank derived through the OPRF. It is the platform's
+  # second oracle, and the one that returns a fact rather than arithmetic, so
+  # it gets the same treatment as oprf_evaluations: every call recorded,
+  # refusals included.
+  #
+  # Note what this table does NOT have: a pseudonym column. Recording which
+  # bank asked about which pseudonym would rebuild, inside the audit trail, the
+  # cross-institution linkage table the whole privacy layer exists to keep this
+  # server from holding. Who asked, when, under which key, and what they were
+  # told is enough to see enumeration in the shape of the traffic, and it is
+  # the most that can be kept without undoing the design.
+
+  - changeSet:
+      id: 16-01092026-add-screening-checks-table
+      author: signa-security
+      changes:
+        - createTable:
+            tableName: screening_checks
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: bank_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: key_id
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: accepted
+                  type: boolean
+                  constraints:
+                    nullable: false
+              # Nullable on purpose: a refused check has no verdict to record,
+              # and storing false would make refusals indistinguishable from
+              # people the network cleared.
+              - column:
+                  name: flagged
+                  type: boolean
+              - column:
+                  name: rejection_reason
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: screening_checks
+            indexName: idx_screening_checks_bank_time
+            columns:
+              - column:
+                  name: bank_id
+              - column:
+                  name: created_at

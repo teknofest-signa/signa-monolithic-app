@@ -45,6 +45,8 @@ public class OprfProperties {
 
     LocalClient localClient = new LocalClient();
 
+    Screening screening = new Screening();
+
     /**
      * Per-bank ceilings on OPRF use.
      *
@@ -89,5 +91,38 @@ public class OprfProperties {
     public static class LocalClient {
 
         boolean enabled = false;
+    }
+
+    /**
+     * The screening endpoint: given a pseudonym, is that person flagged
+     * anywhere in the network?
+     *
+     * <p>It gets a budget of its own rather than sharing the evaluation one,
+     * for two reasons. Screening is the routine per-transaction path and
+     * evaluation is the occasional enrolment path, so one ceiling sized for
+     * both is wrong for each. And a bank that has exhausted its enrolment
+     * budget should still be able to screen the customer standing in front of
+     * it; refusing that would push the caller towards processing the
+     * transaction unchecked, which is the opposite of what this platform is
+     * for.
+     *
+     * <p>The limit still matters. Screening is the second half of the
+     * enumeration attack: derive the pseudonym of a candidate identifier, ask
+     * whether that person is flagged, and a bank has learned something about
+     * someone who is not its customer. Evaluation is capped, so the pairing is
+     * capped twice over, and every check is recorded in
+     * {@code screening_checks}.
+     */
+    @Data
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class Screening {
+
+        /**
+         * Ceilings on screening checks, counted one per pseudonym asked about.
+         * The defaults match the evaluation ones as a starting point; a
+         * production deployment screening every transaction will need the
+         * daily figure raised deliberately, per bank.
+         */
+        RateLimit rateLimit = new RateLimit();
     }
 }

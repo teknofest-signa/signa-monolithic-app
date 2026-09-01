@@ -88,6 +88,7 @@ transcript, so cheating on any single element fails the proof for the batch.
 | Identifier canonicalisation | `crypto/PiiNormalizer.java` |
 | Key ring, rotation | `crypto/key/` |
 | Endpoint, quotas, audit | `service/OprfService.java`, `service/OprfRateLimiter.java` |
+| Cross-institution screening | `service/ScreeningService.java` |
 
 `VoprfClient` lives here so the reference implementation and the server cannot
 drift apart, and so the RFC vectors exercise both halves. **It belongs in the
@@ -126,7 +127,77 @@ slipping through. `PiiNormalizer` is the single definition: NFKC, strip
 whitespace and separators, upper-case in the invariant locale, prefix the
 identifier domain. Every connector must apply it identically.
 
-## 5. Threat model
+## 5. Screening a person
+
+Enrolment is only half of what the network is for. The other half is the
+question a bank asks before it acts: **is the person in front of me flagged
+anywhere?**
+
+This cannot be answered by the evaluation endpoint, and it is worth being
+precise about why, because the obvious design does not work. The server
+receives `B = r·P` and returns `k·B`. It cannot remove `r` — the blind is
+fresh per request and never leaves the bank — so at that moment the server
+holds no pseudonym and has nothing to match against. Only the bank can
+unblind. So screening is a second call, made after unblinding, carrying
+`k·P`:
+
+```bash
+# 1-2. Blind and evaluate exactly as for enrolment, then verify and unblind.
+
+# 3. Ask the network about the pseudonym. Not the FIN, and not a name.
+curl -X POST https://<host>/api/v1/screening \
+  -H "X-Signa-Client-Id: bank_1a2b3c4d5e6f7a8b" \
+  -H "X-Signa-Api-Key: signa_sk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"pseudonym":"0412e8f7...","oprfKeyId":"a1b2c3d4e5f60718"}'
+
+{"status":"FLAGGED","oprfKeyId":"a1b2c3d4e5f60718","enrolledWithYou":false,"checkedAt":"..."}
+```
+
+The caller does not have to have enrolled the person. That is the whole
+point: a bank meeting someone for the first time gets the network's answer
+about them without either side naming them.
+
+### What the answer deliberately does not say
+
+`FLAGGED` means at least one member institution has blocked this person, or
+the network suspended them because another institution did. It does not say
+which institution, under what name, how many, or when. Each of those is a
+step towards reconstructing another bank's fraud list one query at a time,
+which would cost more privacy than the OPRF buys back.
+
+`CLEAR` covers both "not known to this network" and "known and in good
+standing", and it must keep covering both. A third value separating them
+would tell every member bank whether a given person banks elsewhere.
+
+`enrolledWithYou` is the one field that reports anything beyond the verdict,
+and it reports the caller's own enrolment — data the caller already holds. It
+distinguishes "flagged, and already my customer" from "flagged, and walking in
+for the first time" without a second query.
+
+### Why it is rate limited and audited
+
+Screening is the platform's second oracle, and the one that returns a fact
+rather than arithmetic. Paired with an evaluation it completes an attack the
+blinding alone does not stop: take a candidate identifier, derive its
+pseudonym, ask whether that person is flagged. Both halves are therefore
+capped per bank, on separate budgets — `application.security.oprf.rate-limit`
+and `application.security.oprf.screening.rate-limit` — so that neither can
+starve the other. A bank that has spent its enrolment budget must still be
+able to screen the transaction in front of it; refusing that would push the
+caller into processing it unchecked.
+
+Every call is recorded in `screening_checks`: who asked, when, under which
+key, and what they were told, refusals included. **Not the pseudonym.** A
+table of "bank X asked about pseudonym Y" would rebuild, inside the audit
+trail, the linkage database this whole layer exists to keep the server from
+holding.
+
+An unknown or retired `oprfKeyId` is an error, never a `CLEAR`. A caller
+misconfigured against the wrong key epoch would otherwise wave through every
+flagged person in the network and see nothing wrong anywhere.
+
+## 6. Threat model
 
 ### Holds
 
@@ -174,7 +245,7 @@ find:
    enforces its own share and the effective limit multiplies. Move the buckets
    to Redis before scaling out.
 
-## 6. Key management
+## 7. Key management
 
 `SIGNA_OPRF_ACTIVE_KEY` is a P-256 scalar in 64 hex characters. There is no
 default and the application refuses to start without it, except under the `dev`
@@ -224,7 +295,7 @@ Rotate on suspected key compromise. Note that rotation does not undo a
 compromise retroactively: an attacker who held the old key can still invert the
 pseudonyms enrolled under it.
 
-## 7. Member bank credentials
+## 8. Member bank credentials
 
 Banks authenticate with `X-Signa-Client-Id` and `X-Signa-Api-Key`, not with an
 admin JWT. An admin token carries no bank identity, so an evaluation made under
@@ -235,7 +306,7 @@ Only a SHA-256 digest is stored. `POST /api/v1/banks/{id}/rotate-api-key`
 replaces a key; `PUT /api/v1/banks/{id}/oprf-access?enabled=false` cuts a bank
 off without deleting its records or its audit trail.
 
-## 8. Tests
+## 9. Tests
 
 `VoprfRfc9497VectorTest` replays the published RFC 9497 Appendix A.3.2 vectors
 byte for byte — key derivation, blinding, evaluation, proofs and outputs, at
@@ -251,7 +322,7 @@ reordered batches, and proofs from a rogue key.
 ./gradlew test --tests "teknofest.signa.producer.crypto.*"
 ```
 
-## 9. Development-only local client
+## 10. Development-only local client
 
 `application.security.oprf.local-client.enabled=true` exposes
 `POST /api/v1/oprf/local/derive`, which accepts a **raw identifier** and runs

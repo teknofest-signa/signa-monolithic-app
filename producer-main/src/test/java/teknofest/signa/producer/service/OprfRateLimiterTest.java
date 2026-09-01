@@ -96,4 +96,55 @@ class OprfRateLimiterTest {
 
         assertTrue(rateLimiter.tryConsume(UUID.randomUUID(), 100_000).allowed());
     }
+
+    @Test
+    @DisplayName("screening draws on its own budget, so enrolment cannot starve it")
+    void screeningBudgetIsSeparateFromEvaluation() {
+        OprfProperties properties = new OprfProperties();
+        properties.getRateLimit().setElementsPerMinute(2);
+        properties.getScreening().getRateLimit().setElementsPerMinute(2);
+
+        OprfRateLimiter rateLimiter = new OprfRateLimiter(properties);
+        UUID bank = UUID.randomUUID();
+
+        assertTrue(rateLimiter.tryConsume(bank, 2).allowed());
+        assertFalse(rateLimiter.tryConsume(bank, 1).allowed());
+
+        // A bank that has spent its enrolment budget must still be able to
+        // check the customer in front of it. Refusing here would push the
+        // caller into processing the transaction unchecked.
+        assertTrue(rateLimiter.tryConsumeScreening(bank, 2).allowed());
+        assertFalse(rateLimiter.tryConsumeScreening(bank, 1).allowed());
+    }
+
+    @Test
+    @DisplayName("screening budgets are per bank, like evaluation budgets")
+    void screeningIsolatesBanks() {
+        OprfProperties properties = new OprfProperties();
+        properties.getScreening().getRateLimit().setElementsPerMinute(3);
+
+        OprfRateLimiter rateLimiter = new OprfRateLimiter(properties);
+        UUID first = UUID.randomUUID();
+        UUID second = UUID.randomUUID();
+
+        assertTrue(rateLimiter.tryConsumeScreening(first, 3).allowed());
+        assertFalse(rateLimiter.tryConsumeScreening(first, 1).allowed());
+        assertTrue(rateLimiter.tryConsumeScreening(second, 3).allowed());
+    }
+
+    @Test
+    @DisplayName("the refusal reason names screening, not evaluation")
+    void screeningReasonNamesScreening() {
+        OprfProperties properties = new OprfProperties();
+        properties.getScreening().getRateLimit().setElementsPerMinute(1);
+
+        OprfRateLimiter rateLimiter = new OprfRateLimiter(properties);
+        UUID bank = UUID.randomUUID();
+
+        rateLimiter.tryConsumeScreening(bank, 1);
+        OprfRateLimiter.Decision decision = rateLimiter.tryConsumeScreening(bank, 1);
+
+        assertFalse(decision.allowed());
+        assertTrue(decision.reason().contains("screening"));
+    }
 }

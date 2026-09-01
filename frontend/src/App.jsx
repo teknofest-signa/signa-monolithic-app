@@ -6,6 +6,7 @@ import Shell from './ui/Shell.jsx';
 import SignIn from './pages/SignIn.jsx';
 import Overview from './pages/Overview.jsx';
 import Customers from './pages/Customers.jsx';
+import Screening from './pages/Screening.jsx';
 import Banks from './pages/Banks.jsx';
 import PrivacyLayer from './pages/PrivacyLayer.jsx';
 import RiskSimulator from './pages/RiskSimulator.jsx';
@@ -36,6 +37,7 @@ function Routed() {
       <Route element={<Shell />}>
         <Route index element={<Overview />} />
         <Route path="customers" element={<Customers />} />
+        <Route path="screening" element={<Screening />} />
         <Route path="banks" element={<Banks />} />
         <Route path="privacy" element={<PrivacyLayer />} />
         <Route path="risk" element={<RiskSimulator />} />

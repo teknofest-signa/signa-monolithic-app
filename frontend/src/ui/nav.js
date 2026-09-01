@@ -2,6 +2,7 @@ import {
   Building2,
   CircleUserRound,
   LayoutGrid,
+  ScanSearch,
   ShieldCheck,
   Users,
   Waves,
@@ -14,6 +15,7 @@ import {
 export const DESTINATIONS = [
   { to: '/', end: true, label: 'Overview', icon: LayoutGrid },
   { to: '/customers', label: 'Customers', icon: Users },
+  { to: '/screening', label: 'Screening', icon: ScanSearch },
   { to: '/banks', label: 'Member banks', icon: Building2 },
   { to: '/privacy', label: 'Privacy layer', icon: ShieldCheck },
   { to: '/risk', label: 'Risk simulator', icon: Waves },

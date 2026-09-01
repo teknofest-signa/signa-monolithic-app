@@ -86,6 +86,13 @@ public class SecurityConfig {
                         // so a BANK-only rule here would make it unreachable.
                         .requestMatchers("/api/v1/oprf/local/**").hasAuthority(SignaAuthorities.SUPER_ADMIN)
                         .requestMatchers("/api/v1/oprf/**").hasAuthority(SignaAuthorities.BANK)
+                        // Screening is a separate authority decision from
+                        // evaluation even though both are member-bank calls:
+                        // one hands out blinded arithmetic, the other hands
+                        // out a fact about a person. Naming it explicitly
+                        // keeps it from ever inheriting a rule written for
+                        // something else.
+                        .requestMatchers("/api/v1/screening/**").hasAuthority(SignaAuthorities.BANK)
                         .requestMatchers("/api/v1/super-admins/**").hasAuthority(SignaAuthorities.SUPER_ADMIN)
                         .requestMatchers("/api/v1/backoffice/**").hasAnyAuthority(SignaAuthorities.SUPER_ADMIN, SignaAuthorities.ADMIN)
                         .requestMatchers("/api/v1/banks/**").hasAnyAuthority(SignaAuthorities.SUPER_ADMIN, SignaAuthorities.ADMIN)

@@ -172,4 +172,22 @@ export const api = {
     localDerive: (identifierType, identifier) =>
       post('/api/v1/oprf/local/derive', { identifierType, identifier }),
   },
+
+  screening: {
+    /**
+     * The second call of the pair. Member-bank credential, like evaluation:
+     * this returns a fact about a person, so it has to be attributable to an
+     * institution and countable against that institution's quota.
+     *
+     * It takes the pseudonym rather than the identifier because it has to.
+     * The server cannot strip the blind from an evaluation, so it never holds
+     * a pseudonym of its own to match on; only the caller, after unblinding,
+     * has one to send.
+     */
+    check: (pseudonym, oprfKeyId) => request('/api/v1/screening', {
+      method: 'POST',
+      auth: 'bank',
+      body: { pseudonym, oprfKeyId },
+    }),
+  },
 };
