@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CircleUserRound, UserMinus, UserPlus } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import {
@@ -33,15 +34,18 @@ export default function Operators() {
   return (
     <Page
       title="Operators"
-      actions={<Button variant="primary" onClick={() => setInviting(true)}>Invite an operator</Button>}
+      eyebrow="Administration"
+      icon={CircleUserRound}
+      lede="Who can sign in to this console, and what each of them is allowed to change."
+      actions={<Button variant="primary" icon={UserPlus} onClick={() => setInviting(true)}>Invite an operator</Button>}
     >
-      <Section title={`${(admins.data ?? []).length} with access`}>
+      <Section title={`${(admins.data ?? []).length} with access`} icon={CircleUserRound}>
         {admins.loading ? (
           <Loading label="Reading the roster" />
         ) : admins.error ? (
           <Notice tone="stop">{admins.error}</Notice>
         ) : (admins.data ?? []).length === 0 ? (
-          <Empty title="Nobody else has access" />
+          <Empty icon={CircleUserRound} title="Nobody else has access" note="Invite a colleague to share the console." />
         ) : (
           <Table columns={['Name', 'Email', 'Role', 'Status', 'Since', '']}>
             {admins.data.map((admin) => (
@@ -56,7 +60,7 @@ export default function Operators() {
                 <td className="muted num">{formatDate(admin.createdAt)}</td>
                 <td>
                   {admin.id !== profile?.id && (
-                    <Button size="sm" variant="danger" onClick={() => setRemoving(admin)}>Revoke</Button>
+                    <Button size="sm" variant="danger" icon={UserMinus} onClick={() => setRemoving(admin)}>Revoke</Button>
                   )}
                 </td>
               </tr>
@@ -80,7 +84,7 @@ export default function Operators() {
           footer={(
             <>
               <Button onClick={() => setRemoving(null)} disabled={working}>Cancel</Button>
-              <Button variant="danger" onClick={confirmRemove} busy={working}>Revoke access</Button>
+              <Button variant="danger" icon={UserMinus} onClick={confirmRemove} busy={working}>Revoke access</Button>
             </>
           )}
         >
@@ -121,6 +125,7 @@ function InviteOperator({ onClose, onInvited }) {
           <Button onClick={onClose} disabled={busy}>Cancel</Button>
           <Button
             variant="primary"
+            icon={UserPlus}
             onClick={submit}
             busy={busy}
             disabled={!form.email.trim() || !form.username.trim()}

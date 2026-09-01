@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Ban, UserPlus, Users } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import {
@@ -54,9 +55,13 @@ export default function Customers() {
   return (
     <Page
       title="Customers"
+      eyebrow="Network"
+      icon={Users}
+      lede="Every enrolment in the network, and the pseudonym key each one was sealed under."
       actions={(
         <Button
           variant="primary"
+          icon={UserPlus}
           onClick={() => setEnrolling(true)}
           disabled={(banks.data ?? []).length === 0}
         >
@@ -74,8 +79,9 @@ export default function Customers() {
 
       <Section
         title={`${total} enrolled`}
+        icon={Users}
         actions={(
-          <div className="row">
+          <div className="segmented">
             {FILTERS.map((option) => (
               <button
                 key={option.value}
@@ -94,7 +100,13 @@ export default function Customers() {
         ) : customers.error ? (
           <Notice tone="stop">{customers.error}</Notice>
         ) : visible.length === 0 ? (
-          <Empty title={rows.length === 0 ? 'No customers' : 'Nothing matches that filter'} />
+          <Empty
+            icon={Users}
+            title={rows.length === 0 ? 'No customers' : 'Nothing matches that filter'}
+            note={rows.length === 0
+              ? 'Enrol the first customer to start building the network.'
+              : 'Try a different status.'}
+          />
         ) : (
           <>
             <Table columns={['Customer', 'Bank', 'Key', 'Status', 'Enrolled', '']}>
@@ -107,7 +119,7 @@ export default function Customers() {
                   <td className="muted num">{formatDate(customer.createdAt)}</td>
                   <td>
                     {customer.customerStatus !== 'BLOCKED' && (
-                      <Button size="sm" variant="danger" onClick={() => setBlocking(customer)}>
+                      <Button size="sm" variant="danger" icon={Ban} onClick={() => setBlocking(customer)}>
                         Block
                       </Button>
                     )}
@@ -145,7 +157,7 @@ export default function Customers() {
           footer={(
             <>
               <Button onClick={() => setBlocking(null)} disabled={working}>Cancel</Button>
-              <Button variant="danger" onClick={confirmBlock} busy={working}>Block and notify the network</Button>
+              <Button variant="danger" icon={Ban} onClick={confirmBlock} busy={working}>Block and notify the network</Button>
             </>
           )}
         >

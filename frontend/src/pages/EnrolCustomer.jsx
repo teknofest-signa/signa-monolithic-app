@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Check, Fingerprint } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import {
@@ -123,7 +124,7 @@ export default function EnrolCustomer({ banks, onClose, onEnrolled }) {
         title="Enrolled"
         lede={name.trim()}
         onClose={onClose}
-        footer={<Button variant="primary" onClick={onClose}>Done</Button>}
+        footer={<Button variant="primary" icon={Check} onClick={onClose}>Done</Button>}
       >
         <div className="label" style={{ marginBottom: 8 }}>Pseudonym</div>
         <CopyValue value={trace.pseudonym} />
@@ -149,7 +150,7 @@ export default function EnrolCustomer({ banks, onClose, onEnrolled }) {
       footer={(
         <>
           <Button onClick={onClose} disabled={busy}>Cancel</Button>
-          <Button variant="primary" onClick={run} busy={busy} disabled={!canSubmit}>
+          <Button variant="primary" icon={Fingerprint} onClick={run} busy={busy} disabled={!canSubmit}>
             Derive and enrol
           </Button>
         </>

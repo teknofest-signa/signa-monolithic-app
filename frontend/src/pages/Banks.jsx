@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Building2, KeyRound, Plus, ShieldOff, Trash2 } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import {
@@ -60,7 +61,10 @@ export default function Banks() {
   return (
     <Page
       title="Member banks"
-      actions={<Button variant="primary" onClick={() => setRegistering(true)}>Register a bank</Button>}
+      eyebrow="Network"
+      icon={Building2}
+      lede="The institutions on the network, their client credentials, and whether the privacy layer will answer them."
+      actions={<Button variant="primary" icon={Plus} onClick={() => setRegistering(true)}>Register a bank</Button>}
     >
       {attached && (
         <Notice tone="ok">
@@ -73,15 +77,17 @@ export default function Banks() {
         </Notice>
       )}
 
-      <Section title={`${(banks.data ?? []).length} registered`}>
+      <Section title={`${(banks.data ?? []).length} registered`} icon={Building2}>
         {banks.loading ? (
           <Loading label="Reading the member list" />
         ) : banks.error ? (
           <Notice tone="stop">{banks.error}</Notice>
         ) : (banks.data ?? []).length === 0 ? (
           <Empty
+            icon={Building2}
             title="No member banks"
-            action={<Button variant="primary" size="sm" onClick={() => setRegistering(true)}>Register a bank</Button>}
+            note="Register the first institution to open the network."
+            action={<Button variant="primary" size="sm" icon={Plus} onClick={() => setRegistering(true)}>Register a bank</Button>}
           />
         ) : (
           <Table columns={['Bank', 'Client id', 'OPRF access', 'Joined', '']}>
@@ -100,11 +106,11 @@ export default function Banks() {
                     <Button size="sm" onClick={() => setAttaching(bank)}>Use credential</Button>
                     {isSuperAdmin && (
                       <>
-                        <Button size="sm" onClick={() => rotate(bank)} disabled={working}>Rotate key</Button>
-                        <Button size="sm" onClick={() => toggleAccess(bank)}>
+                        <Button size="sm" icon={KeyRound} onClick={() => rotate(bank)} disabled={working}>Rotate key</Button>
+                        <Button size="sm" icon={ShieldOff} onClick={() => toggleAccess(bank)}>
                           {bank.oprfEnabled ? 'Suspend' : 'Restore'}
                         </Button>
-                        <Button size="sm" variant="danger" onClick={() => setRemoving(bank)}>Remove</Button>
+                        <Button size="sm" variant="danger" icon={Trash2} onClick={() => setRemoving(bank)}>Remove</Button>
                       </>
                     )}
                   </div>
@@ -144,7 +150,7 @@ export default function Banks() {
           footer={(
             <>
               <Button onClick={() => setRemoving(null)} disabled={working}>Cancel</Button>
-              <Button variant="danger" onClick={confirmRemove} busy={working}>Remove from the network</Button>
+              <Button variant="danger" icon={Trash2} onClick={confirmRemove} busy={working}>Remove from the network</Button>
             </>
           )}
         >

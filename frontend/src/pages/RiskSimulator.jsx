@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { History, Play, SlidersHorizontal, Waves } from 'lucide-react';
 import { api } from '../lib/api.js';
 import {
   Button, Empty, Field, Input, Loading, Notice, Page, Pill, Section, Select,
@@ -62,11 +63,15 @@ export default function RiskSimulator() {
   return (
     <Page
       title="Risk simulator"
+      eyebrow="Controls"
+      icon={Waves}
+      lede="Score a transaction against the live rule set and see the decision the network would return."
     >
       <Notice>Scored by the current rule set. The learned model is not wired in yet.</Notice>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 420px) 1fr', gap: 48, alignItems: 'start' }}>
-        <form onSubmit={run}>
+      <div className="sim-grid">
+        <form onSubmit={run} className="panel">
+          <div className="panel-body">
           <div className="grid-2">
             <Field label="Amount">
               <Input type="number" min="0" step="0.01" value={form.amount} onChange={set('amount')} required />
@@ -101,9 +106,10 @@ export default function RiskSimulator() {
             </label>
           </div>
 
-          <Button type="submit" variant="primary" size="lg" busy={busy} style={{ width: '100%' }}>
+          <Button type="submit" variant="primary" size="lg" icon={Play} busy={busy} style={{ width: '100%' }}>
             Score this transaction
           </Button>
+          </div>
         </form>
 
         <div>
@@ -119,7 +125,12 @@ export default function RiskSimulator() {
                 </Pill>
 
                 <div className="bar" style={{ marginTop: 26 }}>
-                  <i style={{ width: `${Math.min(100, score * 100)}%` }} />
+                  <i
+                    style={{
+                      width: `${Math.min(100, score * 100)}%`,
+                      background: `var(--${riskTone(result.transactionFraudStatus)})`,
+                    }}
+                  />
                 </div>
 
                 <dl className="kv" style={{ marginTop: 26, gridTemplateColumns: '1fr auto' }}>
@@ -133,20 +144,20 @@ export default function RiskSimulator() {
               </div>
             </div>
           ) : (
-            <div className="panel panel-warm">
-              <div className="panel-body">
-                <Empty title="No result yet" />
-              </div>
-            </div>
+            <Empty
+              icon={SlidersHorizontal}
+              title="No result yet"
+              note="Set the transaction on the left and score it."
+            />
           )}
         </div>
       </div>
 
-      <Section title="Recent decisions">
+      <Section title="Recent decisions" icon={History}>
         {history.loading ? (
           <Loading label="Reading the log" />
         ) : pageItems(history.data).length === 0 ? (
-          <Empty title="No decisions recorded" />
+          <Empty icon={History} title="No decisions recorded" note="Scored transactions are logged here." />
         ) : (
           <Table columns={['Amount', 'Type', 'Channel', 'Flags', 'Score', 'Decision', 'When']}>
             {pageItems(history.data).map((row) => (

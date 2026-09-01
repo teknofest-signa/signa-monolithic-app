@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { SessionProvider, useSession } from './lib/session.jsx';
+import { ThemeProvider } from './ui/theme.jsx';
 import { ToastProvider } from './ui/kit.jsx';
 import Shell from './ui/Shell.jsx';
 import SignIn from './pages/SignIn.jsx';
@@ -49,11 +50,13 @@ function Routed() {
 export default function App() {
   return (
     <BrowserRouter>
-      <SessionProvider>
-        <ToastProvider>
-          <Routed />
-        </ToastProvider>
-      </SessionProvider>
+      <ThemeProvider>
+        <SessionProvider>
+          <ToastProvider>
+            <Routed />
+          </ToastProvider>
+        </SessionProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

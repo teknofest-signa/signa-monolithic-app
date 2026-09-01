@@ -4,12 +4,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Signa Console</title>
+    <meta name="color-scheme" content="light dark" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Inter carries the whole interface; Geist Mono carries key material and
+         hex. Two separate requests so a failure on one cannot take the other
+         down with it. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400..700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300..600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      // Paint the stored theme before first paint, so a dark-mode operator
+      // never gets a white flash on reload.
+      (function () {
+        try {
+          var saved = localStorage.getItem('signa.theme');
+          var dark = saved === 'dark' ||
+            (saved !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

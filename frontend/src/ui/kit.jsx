@@ -1,15 +1,22 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  animate, motion, useMotionValue, useReducedMotion, useTransform,
+} from 'framer-motion';
+import { Check, CircleAlert, CircleCheck, Copy, Inbox, Info, TriangleAlert } from 'lucide-react';
+import { formatCount } from '../lib/format.js';
 
 /* --------------------------------------------------------------- basics -- */
 
-export function Button({ variant = 'ghost', size, busy, children, ...rest }) {
+export function Button({ variant = 'ghost', size, busy, icon: Icon, children, ...rest }) {
   const classes = ['btn', `btn-${variant}`, size ? `btn-${size}` : '', busy ? 'is-busy' : '']
     .filter(Boolean)
     .join(' ');
 
   return (
     <button type="button" className={classes} disabled={rest.disabled || busy} {...rest}>
-      {busy && <span className={`spin${variant === 'primary' ? ' on-ink' : ''}`} />}
+      {busy
+        ? <span className={`spin${variant === 'primary' ? ' on-ink' : ''}`} />
+        : Icon && <Icon size={size === 'sm' ? 13 : 15} strokeWidth={1.9} />}
       {children}
     </button>
   );
@@ -33,11 +40,19 @@ export function Select({ children, ...rest }) {
   return <select className="select" {...rest}>{children}</select>;
 }
 
+/** The glyph carries the tone before the words do. */
+const NOTICE_ICONS = { ok: CircleCheck, warn: TriangleAlert, stop: CircleAlert };
+
 export function Notice({ tone, title, children }) {
+  const Icon = NOTICE_ICONS[tone] ?? Info;
+
   return (
     <div className={`notice${tone ? ` ${tone}` : ''}`}>
-      {title && <div className="notice-title">{title}</div>}
-      {children}
+      <Icon size={15} strokeWidth={1.9} />
+      <div>
+        {title && <div className="notice-title">{title}</div>}
+        {children}
+      </div>
     </div>
   );
 }
@@ -55,9 +70,10 @@ export const customerTone = (status) => CUSTOMER_TONES[status] ?? 'mute';
 export const riskTone = (status) => RISK_TONES[status] ?? 'mute';
 export const adminTone = (status) => ADMIN_TONES[status] ?? 'mute';
 
-export function Empty({ title, note, action }) {
+export function Empty({ icon: Icon = Inbox, title, note, action }) {
   return (
     <div className="empty">
+      <div className="empty-glyph"><Icon size={19} strokeWidth={1.6} /></div>
       <div className="empty-title">{title}</div>
       {note && <div className="empty-note">{note}</div>}
       {action && <div style={{ marginTop: 20 }}>{action}</div>}
@@ -67,7 +83,7 @@ export function Empty({ title, note, action }) {
 
 export function Loading({ label = 'Loading' }) {
   return (
-    <div className="empty">
+    <div className="empty" style={{ border: 'none', background: 'none' }}>
       <span className="spin" />
       <div className="empty-note" style={{ marginTop: 12 }}>{label}</div>
     </div>
@@ -76,11 +92,17 @@ export function Loading({ label = 'Loading' }) {
 
 /* --------------------------------------------------------------- layout -- */
 
-export function Page({ title, lede, actions, children }) {
+export function Page({ title, lede, eyebrow, icon: Icon, actions, children }) {
   return (
     <div className="page">
       <header className="page-head">
         <div>
+          {(eyebrow || Icon) && (
+            <div className="page-eyebrow">
+              {Icon && <Icon size={14} strokeWidth={1.9} />}
+              {eyebrow && <span className="label">{eyebrow}</span>}
+            </div>
+          )}
           <h1 className="display page-title">{title}</h1>
           {lede && <p className="page-lede">{lede}</p>}
         </div>
@@ -91,13 +113,18 @@ export function Page({ title, lede, actions, children }) {
   );
 }
 
-export function Section({ title, note, actions, children }) {
+export function Section({ title, icon: Icon, note, actions, children }) {
   return (
     <section className="section">
       {(title || actions) && (
         <div className="section-head">
           <div>
-            {title && <h2 className="section-title">{title}</h2>}
+            {title && (
+              <h2 className="section-title">
+                {Icon && <Icon size={15} strokeWidth={1.9} />}
+                {title}
+              </h2>
+            )}
             {note && <p className="field-note" style={{ marginTop: 4 }}>{note}</p>}
           </div>
           {actions && <div className="row">{actions}</div>}
@@ -108,24 +135,99 @@ export function Section({ title, note, actions, children }) {
   );
 }
 
-export function Figure({ label, value, note }) {
+/* -------------------------------------------------------------- figures -- */
+
+/**
+ * A number that counts up to itself once, so a figure reads as something being
+ * measured rather than something printed. Honours the reduced-motion setting.
+ */
+export function Counter({ value, format = formatCount }) {
+  const still = useReducedMotion();
+  const raw = useMotionValue(still ? value : 0);
+  const shown = useTransform(raw, (current) => format(Math.round(current)));
+
+  useEffect(() => {
+    if (still) {
+      raw.set(value);
+      return undefined;
+    }
+    const controls = animate(raw, value, { duration: 0.85, ease: [0.22, 0.8, 0.3, 1] });
+    return () => controls.stop();
+  }, [value, still, raw]);
+
+  return <motion.span>{shown}</motion.span>;
+}
+
+/**
+ * Recent movement, one bar per period. Counts are discrete, so bars are the
+ * honest mark for them — an area chart implies a continuous quantity between
+ * the points and turns sparse days into a smear. A series with nothing to say
+ * — fewer than two periods — renders nothing at all.
+ */
+export function TrendBars({ points, label }) {
+  if (!points || points.length < 2) return null;
+
+  const peak = Math.max(...points, 1);
+  const last = points.length - 1;
+
   return (
-    <div className="figure">
-      <div className="label">{label}</div>
-      <div className="figure-value">{value}</div>
-      {note && <div className="figure-note">{note}</div>}
+    <div className="trend" role="img" aria-label={label}>
+      {points.map((value, index) => (
+        <span
+          // eslint-disable-next-line react/no-array-index-key
+          key={index}
+          className={index === last ? 'now' : undefined}
+          style={{ height: `${Math.max(7, (value / peak) * 100)}%` }}
+        />
+      ))}
     </div>
+  );
+}
+
+/**
+ * Parts of one whole, at the proportions they actually hold. Three separate
+ * counts tell you three numbers; one bar tells you the shape of the population.
+ */
+export function MixBar({ parts }) {
+  const shown = parts.filter((part) => part.value > 0);
+  if (shown.length === 0) return null;
+
+  return (
+    <>
+      <div className="mix">
+        {shown.map((part) => (
+          <span
+            key={part.label}
+            className={`mix-part ${part.tone}`}
+            style={{ flexGrow: part.value }}
+            title={`${part.label}: ${formatCount(part.value)}`}
+          />
+        ))}
+      </div>
+
+      <ul className="mix-legend">
+        {shown.map((part) => (
+          <li key={part.label}>
+            <i className={part.tone} />
+            {part.label}
+            <b>{formatCount(part.value)}</b>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
 export function Table({ columns, children }) {
   return (
-    <table className="table">
-      <thead>
-        <tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr>
-      </thead>
-      <tbody>{children}</tbody>
-    </table>
+    <div className="table-wrap">
+      <table className="table">
+        <thead>
+          <tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
   );
 }
 
@@ -178,7 +280,12 @@ export function ToastProvider({ children }) {
       {children}
       <div className="toast-dock">
         {toasts.map((toast) => (
-          <div key={toast.id} className={`toast${toast.tone ? ` ${toast.tone}` : ''}`}>{toast.message}</div>
+          <div key={toast.id} className={`toast${toast.tone ? ` ${toast.tone}` : ''}`}>
+            {toast.tone === 'bad'
+              ? <CircleAlert size={15} strokeWidth={2} />
+              : <CircleCheck size={15} strokeWidth={2} />}
+            {toast.message}
+          </div>
         ))}
       </div>
     </ToastContext.Provider>
@@ -221,6 +328,7 @@ export function CopyValue({ value, label = 'Copy', className = 'hex' }) {
       <div className={`grow ${className}`}>{value}</div>
       <Button
         size="sm"
+        icon={copied ? Check : Copy}
         onClick={() => {
           navigator.clipboard?.writeText(value);
           setCopied(true);

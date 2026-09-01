@@ -1,10 +1,14 @@
 import { useState } from 'react';
+import { ArrowRight, Moon, Sun } from 'lucide-react';
 import { useSession } from '../lib/session.jsx';
+import { useTheme } from '../ui/theme.jsx';
 import { api } from '../lib/api.js';
 import { Button, Field, Input, Notice } from '../ui/kit.jsx';
+import Mark from '../ui/Mark.jsx';
 
 export default function SignIn() {
   const { signIn, parameters } = useSession();
+  const { theme, toggle } = useTheme();
   const [mode, setMode] = useState('signIn');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +37,21 @@ export default function SignIn() {
   return (
     <div className="gate">
       <div className="gate-card">
-        <div className="gate-mark">SIGNA</div>
+        <div className="gate-brand">
+          <span className="brand-glyph" style={{ width: 30, height: 30, flexBasis: 30, borderRadius: 9 }}>
+            <Mark size={17} />
+          </span>
+          <span className="gate-mark">SIGNA</span>
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm"
+            style={{ marginLeft: 'auto' }}
+            onClick={toggle}
+            aria-label="Switch theme"
+          >
+            {theme === 'dark' ? <Sun size={15} strokeWidth={1.9} /> : <Moon size={15} strokeWidth={1.9} />}
+          </button>
+        </div>
 
         <div className="gate-panel">
           {error && <Notice tone="stop">{error}</Notice>}
@@ -74,6 +92,7 @@ export default function SignIn() {
               style={{ width: '100%', marginTop: 4 }}
             >
               {mode === 'signIn' ? 'Sign in' : 'Send reset link'}
+              {!busy && <ArrowRight size={15} strokeWidth={1.9} />}
             </Button>
           </form>
 
@@ -94,7 +113,7 @@ export default function SignIn() {
             institution was issued. */}
         <div className="gate-foot">
           <span>{window.location.host}</span>
-          <span className="mono" style={{ fontSize: 12 }}>
+          <span className="mono" style={{ fontSize: 11.5 }}>
             {parameters ? `${parameters.ciphersuite} · ${parameters.activeKeyId}` : '—'}
           </span>
         </div>

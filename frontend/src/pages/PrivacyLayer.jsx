@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BadgeCheck, FileKey, ShieldCheck, SlidersHorizontal, TriangleAlert } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { useSession } from '../lib/session.jsx';
 import {
@@ -51,11 +52,17 @@ export default function PrivacyLayer() {
     }
   }
 
-  if (parameters.loading) return <Page title="Privacy layer"><Loading label="Reading parameters" /></Page>;
+  if (parameters.loading) {
+    return (
+      <Page title="Privacy layer" eyebrow="Controls" icon={ShieldCheck}>
+        <Loading label="Reading parameters" />
+      </Page>
+    );
+  }
 
   if (parameters.error) {
     return (
-      <Page title="Privacy layer">
+      <Page title="Privacy layer" eyebrow="Controls" icon={ShieldCheck}>
         <Notice tone="stop">{parameters.error}</Notice>
       </Page>
     );
@@ -68,8 +75,11 @@ export default function PrivacyLayer() {
   return (
     <Page
       title="Privacy layer"
+      eyebrow="Controls"
+      icon={ShieldCheck}
+      lede="The parameters every pseudonym is derived under, and a live check that the server is still answering with the key it publishes."
       actions={(
-        <Button variant="primary" onClick={attest} busy={checking} disabled={!bank}>
+        <Button variant="primary" icon={BadgeCheck} onClick={attest} busy={checking} disabled={!bank}>
           Run attestation
         </Button>
       )}
@@ -97,7 +107,7 @@ export default function PrivacyLayer() {
         </Notice>
       )}
 
-      <Section title="Parameters">
+      <Section title="Parameters" icon={SlidersHorizontal}>
         <div className="panel">
           <div className="panel-body">
             <dl className="kv">
@@ -123,6 +133,7 @@ export default function PrivacyLayer() {
 
       <Section
         title="Key ring"
+        icon={FileKey}
         actions={retired.length > 0 ? <Pill tone="warn">Rotation in progress</Pill> : null}
       >
         <Table columns={['Key id', 'Public key', 'Status']}>
@@ -144,7 +155,11 @@ export default function PrivacyLayer() {
         )}
       </Section>
 
-      <Section title="Known limitations">
+      <Section
+        title="Known limitations"
+        icon={TriangleAlert}
+        note="Written down because a privacy layer that only lists its guarantees is marketing."
+      >
         <Table columns={['Limitation', 'Mitigation']}>
           <tr>
             <td className="lead">Key holder can brute-force stored pseudonyms</td>
