@@ -361,7 +361,7 @@ function Show-Credentials {
     Write-Host '  ---------------------------------------------------------'
     Write-Host '  Console    ' -NoNewline; Write-Host 'http://localhost:5173' -ForegroundColor Cyan
     Write-Host '  Producer   ' -NoNewline; Write-Host 'http://localhost:9090' -ForegroundColor Cyan
-    Write-Host '  API docs   ' -NoNewline; Write-Host 'http://localhost:9090/swagger-ui.html' -ForegroundColor Cyan
+    Write-Host '  API docs   ' -NoNewline; Write-Host 'http://localhost:9090/swagger-ui/index.html' -ForegroundColor Cyan
     Write-Host ''
     Write-Host '  Sign in with' -ForegroundColor White
     Write-Host "    email     $($env:BOOTSTRAP_ADMIN_EMAIL)" -ForegroundColor Green
