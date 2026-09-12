@@ -81,6 +81,8 @@ public class SecurityConfig {
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/oprf/public-key").permitAll()
+                        .requestMatchers("/api/v1/transactions/**").permitAll()
+
                         // Ordered before the BANK rule below: the development
                         // client is operated by a human, not by a member bank,
                         // so a BANK-only rule here would make it unreachable.
@@ -98,10 +100,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/banks/**").hasAnyAuthority(SignaAuthorities.SUPER_ADMIN, SignaAuthorities.ADMIN)
                         .requestMatchers("/api/v1/simulation/**").hasAnyAuthority(SignaAuthorities.SUPER_ADMIN, SignaAuthorities.ADMIN)
                         .requestMatchers("/api/v1/customers/**").hasAnyAuthority(SignaAuthorities.SUPER_ADMIN, SignaAuthorities.ADMIN)
-                        // Deny by default. Without this, any path not named
-                        // above is reachable unauthenticated, so every new
-                        // controller ships open until someone remembers to add
-                        // a rule for it.
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -1,0 +1,127 @@
+databaseChangeLog:
+  - changeSet:
+      id: 17-12092026-add-transaction-risk-checks-tables
+      author: Jahangir Alisoy
+      changes:
+        - createTable:
+            tableName: transaction_risk_checks
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_account_id
+                  type: VARCHAR(255)
+              - column:
+                  name: user_name
+                  type: VARCHAR(255)
+              - column:
+                  name: user_iban
+                  type: VARCHAR(255)
+              - column:
+                  name: user_account_type
+                  type: VARCHAR(255)
+              - column:
+                  name: user_member_since
+                  type: VARCHAR(255)
+              - column:
+                  name: account_current_balance
+                  type: DECIMAL(19,4)
+              - column:
+                  name: account_currency
+                  type: VARCHAR(64)
+              - column:
+                  name: transaction_amount
+                  type: DECIMAL(19,4)
+              - column:
+                  name: transaction_currency
+                  type: VARCHAR(64)
+              - column:
+                  name: transaction_note
+                  type: VARCHAR(500)
+              - column:
+                  name: recipient_type
+                  type: VARCHAR(64)
+              - column:
+                  name: recipient_name
+                  type: VARCHAR(255)
+              - column:
+                  name: recipient_reference
+                  type: VARCHAR(255)
+              - column:
+                  name: requested_at
+                  type: timestamp with time zone
+              - column:
+                  name: approved
+                  type: BOOLEAN
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: VARCHAR(500)
+              - column:
+                  name: risk_score
+                  type: DECIMAL(19,4)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: transaction_risk_check_history_entries
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: risk_check_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_history_risk_check
+                    references: transaction_risk_checks(id)
+              - column:
+                  name: history_type
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: category
+                  type: VARCHAR(255)
+              - column:
+                  name: transaction_date
+                  type: timestamp with time zone
+              - column:
+                  name: amount
+                  type: DECIMAL(19,4)
+              - column:
+                  name: initials
+                  type: VARCHAR(64)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: transaction_risk_checks
+            indexName: idx_tx_risk_check_user_created
+            columns:
+              - column:
+                  name: user_account_id
+              - column:
+                  name: created_at
+        - createIndex:
+            tableName: transaction_risk_check_history_entries
+            indexName: idx_tx_risk_check_history_check_id
+            columns:
+              - column:
+                  name: risk_check_id

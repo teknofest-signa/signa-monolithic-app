@@ -66,7 +66,7 @@ application:
         expiration: ${ACCESS_TOKEN_EXPIRATION:36000000}
 
     cors:
-      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,https://teknofest-signa.github.io/bank/}
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,https://teknofest-signa.github.io/bank/,http://localhost:61549}
 
     # Oblivious pseudonym layer (RFC 9497 VOPRF, ciphersuite P256-SHA256).
     # See docs/oprf-layer.md for the protocol, the threat model and the
