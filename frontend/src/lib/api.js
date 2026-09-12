@@ -190,4 +190,40 @@ export const api = {
       body: { pseudonym, oprfKeyId },
     }),
   },
+
+  riskChecks: {
+    list: (page = 0, size = 10, status = 'ALL') => {
+      const query = new URLSearchParams({ page, size });
+      if (status && status !== 'ALL') query.set('status', status);
+      return get(`/api/v1/backoffice/risk-checks?${query.toString()}`);
+    },
+    get: (id) => get(`/api/v1/backoffice/risk-checks/${id}`),
+    downloadExcel: async (id) => {
+      const jwt = token.get();
+      const headers = jwt ? { Authorization: `Bearer ${jwt}` } : {};
+      const res = await fetch(`${BASE}/api/v1/backoffice/risk-checks/${id}/export/excel`, { headers });
+      if (!res.ok) throw new ApiError('Failed to download Excel report', res.status, null);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `risk-check-${id}.xls`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    },
+    downloadReport: async (id) => {
+      const jwt = token.get();
+      const headers = jwt ? { Authorization: `Bearer ${jwt}` } : {};
+      const res = await fetch(`${BASE}/api/v1/backoffice/risk-checks/${id}/export/report`, { headers });
+      if (!res.ok) throw new ApiError('Failed to open report', res.status, null);
+      const text = await res.text();
+      const reportWindow = window.open('', '_blank');
+      if (reportWindow) {
+        reportWindow.document.write(text);
+        reportWindow.document.close();
+      }
+    },
+  },
 };

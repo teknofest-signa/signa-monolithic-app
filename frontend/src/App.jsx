@@ -5,6 +5,7 @@ import { ToastProvider } from './ui/kit.jsx';
 import Shell from './ui/Shell.jsx';
 import SignIn from './pages/SignIn.jsx';
 import Overview from './pages/Overview.jsx';
+import RiskChecks from './pages/RiskChecks.jsx';
 import Customers from './pages/Customers.jsx';
 import Screening from './pages/Screening.jsx';
 import Banks from './pages/Banks.jsx';
@@ -36,6 +37,8 @@ function Routed() {
     <Routes>
       <Route element={<Shell />}>
         <Route index element={<Overview />} />
+        <Route path="transactions" element={<RiskChecks />} />
+        <Route path="risk-checks" element={<RiskChecks />} />
         <Route path="customers" element={<Customers />} />
         <Route path="screening" element={<Screening />} />
         <Route path="banks" element={<Banks />} />
